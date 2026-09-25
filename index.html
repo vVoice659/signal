@@ -55,9 +55,9 @@ const VOICES = [
 ];
 
 const DIFFS = [
-  { signals: 5, quota: 3, time: 55, amp: 0.010, spd: 0.5 },
-  { signals: 7, quota: 4, time: 55, amp: 0.018, spd: 0.8 },
-  { signals: 9, quota: 5, time: 55, amp: 0.032, spd: 1.0 }
+  { signals: 5, time: 22, amp: 0.014, spd: 0.6 },
+  { signals: 7, time: 30, amp: 0.024, spd: 0.9 },
+  { signals: 9, time: 48, amp: 0.034, spd: 1.1 }
 ];
 
 const S = {
@@ -65,7 +65,6 @@ const S = {
   night: 0,
   t: 0,
   timeLeft: 0,
-  quota: 0,
   total: 0,
   heard: 0,
   tuner: 0.5,
@@ -91,7 +90,6 @@ const startNight = (n) => {
   S.night = n;
   const d = DIFFS[Math.min(n, DIFFS.length - 1)];
   S.timeLeft = d.time;
-  S.quota = d.quota;
   S.total = d.signals;
   S.heard = 0;
   S.transcript = [];
@@ -118,7 +116,7 @@ const startNight = (n) => {
 };
 
 const endNight = () => {
-  if (S.heard >= S.quota) {
+  if (S.heard >= S.total) {
     S.phase = (S.night >= DIFFS.length - 1) ? 'win' : 'dawn_ok';
   } else {
     S.phase = 'over';
@@ -369,7 +367,7 @@ const render = () => {
     if (S.night === 0) {
       ctx.fillStyle = '#3f4650';
       ctx.font = '12px ui-monospace, monospace';
-      ctx.fillText('sweep the band · static softens near a voice · stop moving to lock it', W / 2, b.y + b.h + 118);
+      ctx.fillText('sweep the band · static softens near a voice · stop moving to lock it · all voices before dawn', W / 2, b.y + b.h + 118);
     }
     ctx.textAlign = 'left';
   }
@@ -378,10 +376,12 @@ const render = () => {
   ctx.font = '13px ui-monospace, monospace';
   ctx.fillText('NIGHT ' + (S.night + 1) + ' / ' + DIFFS.length, 24, 34);
   ctx.textAlign = 'right';
-  ctx.fillText(Math.max(0, Math.ceil(S.timeLeft)) + 's', W - 24, 34);
+  const tl = Math.max(0, Math.ceil(S.timeLeft));
+  ctx.fillStyle = (S.phase === 'play' && tl <= 10) ? '#e0685a' : '#8b93a0';
+  ctx.fillText('DAWN IN ' + tl + 's', W - 24, 34);
   ctx.textAlign = 'left';
-  ctx.fillStyle = S.heard >= S.quota ? '#7fbf7f' : '#8b93a0';
-  ctx.fillText('HEARD ' + S.heard + ' / ' + S.total + '   (need ' + S.quota + ')', 24, 56);
+  ctx.fillStyle = S.heard >= S.total ? '#7fbf7f' : '#8b93a0';
+  ctx.fillText('HEARD ' + S.heard + ' / ' + S.total, 24, 56);
 
   const baseY = H - 28;
   ctx.fillStyle = '#f0b45a';
@@ -403,7 +403,9 @@ const render = () => {
       ctx.font = '14px ui-monospace, monospace';
       ctx.fillText('voices drift across the band', W / 2, H / 2 + 4);
       ctx.fillText('static softens as you near one', W / 2, H / 2 + 26);
-      ctx.fillText('stop moving to lock it · move to tune', W / 2, H / 2 + 60);
+      ctx.fillText('stop moving to lock it · move to tune', W / 2, H / 2 + 48);
+      ctx.fillStyle = '#c98a3f';
+      ctx.fillText('transcribe every voice before dawn', W / 2, H / 2 + 72);
       ctx.fillStyle = '#f0b45a';
       ctx.fillText('press or click to begin', W / 2, H / 2 + 104);
     } else if (S.phase === 'dawn_ok') {
@@ -427,7 +429,7 @@ const render = () => {
       ctx.fillText('SIGNAL LOST', W / 2, H / 2 - 10);
       ctx.fillStyle = '#8b93a0';
       ctx.font = '14px ui-monospace, monospace';
-      ctx.fillText('you transcribed ' + S.heard + ' of ' + S.total + ' before dawn', W / 2, H / 2 + 24);
+      ctx.fillText('dawn came with ' + (S.total - S.heard) + ' voices unheard', W / 2, H / 2 + 24);
       ctx.fillStyle = '#f0b45a';
       ctx.fillText('click to try again', W / 2, H / 2 + 60);
     }
